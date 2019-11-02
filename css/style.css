@@ -47,7 +47,6 @@ div.scoreboard {
 
 img.arrow {
     width: 100%;
-    grid-row-start: 16;
     height: 100%;
 }
 img.scoreboardimg{
@@ -94,6 +93,9 @@ p.d {
     grid-row: 3 / 4;
 }
 
+input.backgroundmusic {
+    margin-left:13%;
+}
 
 
 

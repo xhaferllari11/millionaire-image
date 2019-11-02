@@ -1,12 +1,14 @@
 //constants
 const fetchURL = 'https://opentdb.com/api.php?amount=45';
 const choices = ['a','b','c','d'];
+const bgPlayer = new Audio('../audio/MainTheme.mp3');
 
 //state variables
 var qNum;           //represented as number 1-15 that the playe is on
 var questions;      //array of questions
 var questionToAsk;  //question object chosen to ask the player
 var prevAskedQuestions; 
+
 
 //cached elements
 var arrowEl = document.querySelector('.arrow');
@@ -16,23 +18,29 @@ var bEl = document.querySelector('.b');
 var cEl = document.querySelector('.c');
 var dEl = document.querySelector('.d');
 var answerPanelEl = document.querySelector('section');
+var bgMusicCheckBox = document.querySelector('input.backgroundmusic');
 
 //event listeners
 answerPanelEl.addEventListener('click', checkAnswer);
+bgMusicCheckBox.addEventListener('change', toggleBgMusic);
 
 //functions
 function render(){
-    questionEl.textContent = questionToAsk.question;
+
+    questionEl.textContent = decodeHtml(questionToAsk.question); 
     aEl.textContent = questionToAsk.incorrect_answers[0];
     bEl.textContent = questionToAsk.incorrect_answers[1];
     cEl.textContent = questionToAsk.incorrect_answers[2];
     dEl.textContent = questionToAsk.incorrect_answers[3];
-    arrowEl.style.cssText = `grid-row-start: ${17-qNum}`;
-
+    arrowEl.style.gridRowStart = 17-qNum;
 }
+
 async function init(){
     qNum = 1;
+    prevAskedQuestions = [];
     questions = await getQuestions();     //stores questions in questions variable
+    bgPlayer.play();
+    bgPlayer.loop = true;
     nextQuestion();
 }
 
@@ -59,6 +67,7 @@ function pickQuestion(){
 function populateAnswers(){
     randIndex = Math.floor(Math.random()*3);
     questionToAsk.incorrect_answers.splice(randIndex,0,questionToAsk.correct_answer);
+    console.log(questionToAsk.correct_answer);
 }
 
 function checkAnswer(evt){
@@ -66,11 +75,12 @@ function checkAnswer(evt){
         evt.target.tagName == 'SECTION') {return;}
     if (questionToAsk.incorrect_answers[choices.findIndex(letter => letter == evt.target.className)] == 
         questionToAsk.correct_answer) {
-            //function to splice out question we just answered.
-            qNum +1;
+            prevAskedQuestions.push(questionToAsk);
+            questions.splice(questions.findIndex(q => q == questionToAsk),1);
+            qNum += 1;
             nextQuestion();
     } else {
-        alert('gave over');
+        alert('Game Over! Try Again');
         init();
     }
 }
@@ -81,7 +91,19 @@ function nextQuestion(){
     render();
 }
 
+function decodeHtml(html) {
+    let txt = document.createElement("textarea");
+    txt.innerHTML = html;
+    return txt.value;
+}
+
+function toggleBgMusic(){
+    bgMusicCheckBox.checked ? bgPlayer.pause() : bgPlayer.play(); 
+}
+
 init();
+
+
 
 
 
