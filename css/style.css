@@ -15,7 +15,9 @@ div.frontcontents {
     padding-left: 12%;
 }
 div.imagecontainer {
+    position: relative;
     display: flex;
+    flex-direction: column;
     height: 350px;
     align-items: center;
 }
@@ -23,6 +25,18 @@ img.frontimg {
     width: 200px;
     height: auto;
     vertical-align: center;
+}
+div.phonecallanswer{
+    padding: 0 10%;
+    position: absolute;
+    top: 18%;
+    color: yellow;
+    font-size: 20px;
+
+}
+img.phonecaller {
+    width: 96px;
+    height: 84px;
 }
 
 div.scoreandlifelines {

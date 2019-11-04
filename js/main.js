@@ -5,15 +5,16 @@ const bgPlayer = new Audio('audio/MainTheme.mp3');
 const gameSounds = new Audio();
 
 //state variables
-var qNum;           //represented as number 1-15 that the playe is on
-var questions;      //array of questions
-var questionToAsk;  //question object chosen to ask the player
+var qNum;                   //represented as number 1-15 that the playe is on
+var questions;              //array of questions
+var questionToAsk;          //question object chosen to ask the player
 var prevAskedQuestions; 
-var lifelines       //lifeline booleans
-var audianceGraphURL;   //URL for API of quickchart.io, uses graph objects from chart.js
-var muteSound;       //player selects to keep music on or off
-var pickedAnswer;   //answer used picked
+var lifelines;              //lifeline booleans
+var audianceGraphURL;       //URL for API of quickchart.io, uses graph objects from chart.js
+var muteSound;              //player selects to keep music on or off
+var pickedAnswer;           //answer used picked
 var pickedAnswerChecked;    //boolean to say if check answer was called
+var phoneCallAns;          //phone call answer if phonecall lifeline used
 
 //cached elements
 var arrowEl = document.querySelector('.arrow');
@@ -27,7 +28,9 @@ var bgMusicCheckBox = document.querySelector('input.backgroundmusic');
 var allMusicCheckBox = document.querySelector('input.allmusic');
 var newGameBtnEl = document.querySelector('.newgame')
 var lifelinesEl = document.querySelector('.lifelines');
-var frontImg =document.querySelector('.frontimg');
+var frontImgEl = document.querySelector('.frontimg');
+var phoneCallerEl = document.querySelector('.phonecaller');
+var phoneCallAnswerEl = document.querySelector('.phonecallanswer');
 
 //event listeners
 answerPanelEl.addEventListener('click', answerClick);
@@ -52,13 +55,33 @@ function render(){
         }
     }
     arrowEl.style.gridRowStart = 17-qNum;
-    if (audianceGraphURL) {
-        frontImg.setAttribute('src',audianceGraphURL);
-    } else {
-        frontImg.setAttribute('src','images/elk.jpeg');
+    //case where audiance and phone call used in same turn
+    if (phoneCallAns && audianceGraphURL){
+        if (frontImgEl.getAttribute('src') == 'images/phonecallcloud.png'){
+            frontImgEl.setAttribute('src',audianceGraphURL);    
+        } else {
+            frontImgEl.setAttribute('src','images/phonecallcloud.png');
+            phoneCallerEl.setAttribute('src','images/phonecall.png');
+            phoneCallAnswerEl.textContent = phoneCallAns;    
+        }
     }
-    
-    // need to fix this, images not loading
+    if (phoneCallAns) {
+        frontImgEl.setAttribute('src','images/phonecallcloud.png');
+        phoneCallerEl.setAttribute('src','images/phonecall.png');
+        phoneCallAnswerEl.textContent = phoneCallAns;
+    } else {
+        frontImgEl.setAttribute('src','images/logo.png');
+        phoneCallerEl.removeAttribute('src');
+        phoneCallAnswerEl.textContent = '';
+    }
+    if (audianceGraphURL) {
+        frontImgEl.setAttribute('src',audianceGraphURL);
+        phoneCallerEl.removeAttribute('src');
+        phoneCallAnswerEl.textContent = '';
+    } else if (!phoneCallAns){
+        frontImgEl.setAttribute('src','images/logo.png');
+    }
+
 
     if (pickedAnswerChecked && pickedAnswer ){
         let correctAnswerLetter = choices[questionToAsk.incorrect_answers.findIndex(ans => ans == questionToAsk.correct_answer)];
@@ -67,12 +90,9 @@ function render(){
         answerPanelEl.style.backgroundImage = `url(images/choice${pickedAnswer}.png)`;
     } else {
         answerPanelEl.style.backgroundImage = `url(images/template5.png)`;        
-    }
-    // console.log(`../images/choice${pickedAnswer}`);
-    // answerPanelEl.style.backgroundImage = `url('../images/choicea.png')`
-    // console.log(answerPanelEl);
-    
+    }    
 }
+
 
 async function init(){
     gameSounds.setAttribute('src','audio/letsPlay.mp3');
@@ -158,6 +178,7 @@ function nextQuestion(){
         alert('PLAYER WINS. WOOHOOO!!! START NEW GAME');
     };
     audianceGraphURL = "";
+    phoneCallAns = "";
     pickedAnswer = null;
     pickedAnswerChecked = false;
     pickQuestion();
@@ -187,6 +208,7 @@ function allMusicHandler(){
     }
 }
 
+// Also consider making an object for each lifelife. Making put object in lifelines object
 function lifelineHandler(evt){
     if (evt.target.getAttribute('src')) {return;}
     let lifeline = evt.target.className;
@@ -215,8 +237,8 @@ function lifelineHandler(evt){
         } else if (questionToAsk.difficulty == 'hard'){
             aRightPercent = Math.floor(30 + Math.random()*25);  //30-55% of audiance guesses right
         }
-        //in case 50/50 was used before audiance
         audianceResponses[rightAnswerIndex] = aRightPercent;
+        //in case 50/50 was used before audiance
         if (questionToAsk.incorrect_answers.some(answer => answer == "")){
             console.log(audianceResponses);
             audianceResponses[questionToAsk.incorrect_answers.findIndex(ans => (ans != "" && ans != questionToAsk.correct_answer))] = 100 - aRightPercent;     
@@ -243,7 +265,34 @@ function lifelineHandler(evt){
         lifelines.audiance = false;
         render();
     } else if (lifeline == 'phone') {
-
+        let aRightPercent;
+        let rightAnswerIndex = questionToAsk.incorrect_answers.findIndex(ans => ans == questionToAsk.correct_answer);
+        let callerGuessed = false;
+        if (questionToAsk.difficulty == 'easy'){
+            aRightPercent = Math.floor((70 + Math.random()*40)/10)*10;  //70-100% sure
+        } else if (questionToAsk.difficulty == 'medium'){
+            aRightPercent = Math.floor((50 + Math.random()*50)/10)*10;  //50-90% sure      
+        } else if (questionToAsk.difficulty == 'hard'){
+            aRightPercent = Math.floor((30 + Math.random()*50)/10)*10;  //30-70% of audiance guesses right
+            //A 50% chance that caller guess a random answer
+            if (Math.random()>.5){
+                callerGuessed = true;
+                //if 50/50 was used, caller guess first answer
+                if (questionToAsk.incorrect_answers.some(answer => answer == "")){
+                    rightAnswerIndex = questionToAsk.findIndex(ans => ans);
+                } else {
+                    //gets a random index
+                    let randArray = [Math.random(),Math.random(),Math.random(),Math.random()];
+                    let maxNum = Math.max(randArray[0],randArray[1],randArray[2],randArray[3]);
+                    rightAnswerIndex = randArray.findIndex(num => num == maxNum);
+                }
+            }
+        }
+        phoneCallAns = (callerGuessed) ?
+        `I think it's ${choices[rightAnswerIndex].toUpperCase()}. But it's a guess.` :
+        `I think it's ${choices[rightAnswerIndex].toUpperCase()}. I'm ${aRightPercent}% sure. Good luck!`
+        lifelines.phone = false;
+        render();
     }
 }
 
