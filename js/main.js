@@ -3,6 +3,13 @@ const fetchURL = 'https://opentdb.com/api.php?amount=45&type=multiple';
 const choices = ['a','b','c','d'];
 const bgPlayer = new Audio('audio/MainTheme.mp3');
 const gameSounds = new Audio();
+const soundsURLs = {
+    'newGame': 'audio/letsPlay.mp3',
+    'fifty':'audio/fiftysound.mp3',
+    'audiance':'audio/audiancesound.mp3',
+    'correct':'audio/correctAnswer.mp3',
+    'wrong':'audio/wrongAnswer.mp3'
+}
 
 //state variables
 var qNum;                   //represented as number 1-15 that the playe is on
@@ -17,7 +24,6 @@ var pickedAnswerChecked;    //boolean to say if check answer was called
 var phoneCallAns;          //phone call answer if phonecall lifeline used
 
 //cached elements
-var arrowEl = document.querySelector('.arrow');
 var questionEl = document.querySelector('.question');
 var aEl = document.querySelector('.a');
 var bEl = document.querySelector('.b');
@@ -31,6 +37,7 @@ var lifelinesEl = document.querySelector('.lifelines');
 var frontImgEl = document.querySelector('.frontimg');
 var phoneCallerEl = document.querySelector('.phonecaller');
 var phoneCallAnswerEl = document.querySelector('.phonecallanswer');
+var highlightQNumberEl = document.querySelector('.highlight');
 
 //event listeners
 answerPanelEl.addEventListener('click', answerClick);
@@ -54,34 +61,34 @@ function render(){
             lifelineEl.setAttribute('src',"");
         }
     }
-    arrowEl.style.gridRowStart = 17-qNum;
+    highlightQNumberEl.style.gridRowStart = 17-qNum;
     //case where audiance and phone call used in same turn
     if (phoneCallAns && audianceGraphURL){
         if (frontImgEl.getAttribute('src') == 'images/phonecallcloud.png'){
-            frontImgEl.setAttribute('src',audianceGraphURL);    
+            frontImgEl.setAttribute('src',audianceGraphURL);
         } else {
             frontImgEl.setAttribute('src','images/phonecallcloud.png');
             phoneCallerEl.setAttribute('src','images/phonecall.png');
             phoneCallAnswerEl.textContent = phoneCallAns;    
         }
+    } else{
+        if (phoneCallAns) {
+            frontImgEl.setAttribute('src','images/phonecallcloud.png');
+            phoneCallerEl.setAttribute('src','images/phonecall.png');
+            phoneCallAnswerEl.textContent = phoneCallAns;
+        } else {
+            frontImgEl.setAttribute('src','images/logo.png');
+            phoneCallerEl.removeAttribute('src');
+            phoneCallAnswerEl.textContent = '';
+        }
+        if (audianceGraphURL) {
+            frontImgEl.setAttribute('src',audianceGraphURL);
+            phoneCallerEl.removeAttribute('src');
+            phoneCallAnswerEl.textContent = '';
+        } else if (!phoneCallAns){
+            frontImgEl.setAttribute('src','images/logo.png');
+        }
     }
-    if (phoneCallAns) {
-        frontImgEl.setAttribute('src','images/phonecallcloud.png');
-        phoneCallerEl.setAttribute('src','images/phonecall.png');
-        phoneCallAnswerEl.textContent = phoneCallAns;
-    } else {
-        frontImgEl.setAttribute('src','images/logo.png');
-        phoneCallerEl.removeAttribute('src');
-        phoneCallAnswerEl.textContent = '';
-    }
-    if (audianceGraphURL) {
-        frontImgEl.setAttribute('src',audianceGraphURL);
-        phoneCallerEl.removeAttribute('src');
-        phoneCallAnswerEl.textContent = '';
-    } else if (!phoneCallAns){
-        frontImgEl.setAttribute('src','images/logo.png');
-    }
-
 
     if (pickedAnswerChecked && pickedAnswer ){
         let correctAnswerLetter = choices[questionToAsk.incorrect_answers.findIndex(ans => ans == questionToAsk.correct_answer)];
@@ -93,10 +100,13 @@ function render(){
     }    
 }
 
+function renderSound(whichSound){
+    gameSounds.setAttribute('src', soundsURLs[whichSound]);
+    muteSound ? gameSounds.removeAttribute('src') : gameSounds.play();
+}
 
 async function init(){
-    gameSounds.setAttribute('src','audio/letsPlay.mp3');
-    muteSound ? gameSounds.removeAttribute('src') : gameSounds.play();
+    renderSound('newGame');
     qNum = 0;
     prevAskedQuestions = [];
     audianceGraphURL = "";
@@ -155,13 +165,11 @@ function checkAnswer(){
     pickedAnswerChecked = true;
     if (questionToAsk.incorrect_answers[choices.findIndex(letter => letter == pickedAnswer)] == 
     questionToAsk.correct_answer) {
-        gameSounds.setAttribute('src','audio/correctAnswer.mp3');
-        muteSound ? gameSounds.removeAttribute('src') : gameSounds.play();
+        renderSound('correct');
         render();
         setTimeout(nextQuestion, 1500);
     } else {
-        gameSounds.setAttribute('src','audio/wrongAnswer.mp3');
-        muteSound ? gameSounds.removeAttribute('src') : gameSounds.play();
+        renderSound('wrong');
         render();
         // alert('Game Over! Try Again');
         // init();
@@ -213,6 +221,7 @@ function lifelineHandler(evt){
     if (evt.target.getAttribute('src')) {return;}
     let lifeline = evt.target.className;
     if (lifeline == 'fifty') {
+        renderSound('fifty');
         let i = 0;
         // waste of time/space while loop
         while (i<2){
@@ -227,6 +236,7 @@ function lifelineHandler(evt){
         lifelines.fifty = false;
         render();
     } else if (lifeline == 'audiance') {                //need logic for using 50/50 and audiance
+        renderSound('audiance');
         let aRightPercent;
         let audianceResponses = [null, null, null, null];
         let rightAnswerIndex = questionToAsk.incorrect_answers.findIndex(ans => ans == questionToAsk.correct_answer);

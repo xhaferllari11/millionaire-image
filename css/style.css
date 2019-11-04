@@ -39,10 +39,6 @@ img.phonecaller {
     height: 84px;
 }
 
-div.scoreandlifelines {
-    width: 40%;
-}
-
 div.lifelines {
     display: flex;
     grid-column-start: 2;
@@ -55,7 +51,7 @@ img.lifeline {
 div.scoreboard {
     display: grid;
     grid-template-rows: 50px repeat(15, 1fr) ;
-    grid-template-columns: 20% auto;
+    grid-template-columns: auto;
     height: 350px;
     width: 250px;
 }
@@ -144,8 +140,31 @@ input.backgroundmusic {
 
 
 
+div.highlight {
+    grid-column: 2 / 3;
+    grid-row-start: 17;
+    position: relative;
+    background-color: rgb(182, 209, 133, .7);
+}
 
 
+@media only screen and (max-width: 768px) {
 
+    div.frontcontents {
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+    }
+    div.scoreboard {
+        height: 280px;
+        width: 200px;
+    }
+    div.scoreandLifelines{
+        padding-left: -10%;
+    }
+    div.frontcontents {
+        padding: 0;
+        padding-bottom: 10px;
+    }
 
-
+}
