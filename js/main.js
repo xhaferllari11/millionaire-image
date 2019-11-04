@@ -1,7 +1,7 @@
 //constants
 const fetchURL = 'https://opentdb.com/api.php?amount=45&type=multiple';
 const choices = ['a','b','c','d'];
-const bgPlayer = new Audio('../audio/MainTheme.mp3');
+const bgPlayer = new Audio('audio/MainTheme.mp3');
 const gameSounds = new Audio();
 
 //state variables
@@ -13,7 +13,7 @@ var lifelines       //lifeline booleans
 var audianceGraphURL;   //URL for API of quickchart.io, uses graph objects from chart.js
 var muteSound;       //player selects to keep music on or off
 var pickedAnswer;   //answer used picked
-
+var pickedAnswerChecked;    //boolean to say if check answer was called
 
 //cached elements
 var arrowEl = document.querySelector('.arrow');
@@ -55,23 +55,30 @@ function render(){
     if (audianceGraphURL) {
         frontImg.setAttribute('src',audianceGraphURL);
     } else {
-        frontImg.setAttribute('src','../images/elk.jpeg');
+        frontImg.setAttribute('src','images/elk.jpeg');
     }
     
-    //need to fix this, images not loading
+    // need to fix this, images not loading
 
-    // if (pickedAnswer) {
-    //     answerPanelEl.style.backgroundImage = `../images/choice${pickedAnswer}`
-    // }
-    // answerPanelEl.style.backgroundImage = `url(../images/choicea)`
+    if (pickedAnswerChecked && pickedAnswer ){
+        let correctAnswerLetter = choices[questionToAsk.incorrect_answers.findIndex(ans => ans == questionToAsk.correct_answer)];
+        answerPanelEl.style.backgroundImage = `url(../images/choice${pickedAnswer + correctAnswerLetter}answer.png)`;
+    } else if (pickedAnswer) {
+        answerPanelEl.style.backgroundImage = `url(../images/choice${pickedAnswer}.png)`;
+    } 
+     else {
+        answerPanelEl.style.backgroundImage = `url(../images/template5.png)`;        
+    }
+    // console.log(`../images/choice${pickedAnswer}`);
+    // answerPanelEl.style.backgroundImage = `url('../images/choicea.png')`
     // console.log(answerPanelEl);
     
 }
 
 async function init(){
-    gameSounds.setAttribute('src','../audio/letsPlay.mp3');
+    gameSounds.setAttribute('src','audio/letsPlay.mp3');
     muteSound ? gameSounds.removeAttribute('src') : gameSounds.play();
-    qNum = 1;
+    qNum = 0;
     prevAskedQuestions = [];
     audianceGraphURL = "";
     questions = await getQuestions();     //stores questions in questions variable
@@ -126,28 +133,34 @@ function answerClick(evt){
 }     
 
 function checkAnswer(){
+    pickedAnswerChecked = true;
     if (questionToAsk.incorrect_answers[choices.findIndex(letter => letter == pickedAnswer)] == 
-        questionToAsk.correct_answer) {
-            gameSounds.setAttribute('src','../audio/correctAnswer.mp3');
-            muteSound ? gameSounds.removeAttribute('src') : gameSounds.play();
-            prevAskedQuestions.push(questionToAsk);
-            questions.splice(questions.findIndex(q => q == questionToAsk),1);
-            qNum += 1;
-            if (qNum>15){
-                alert('PLAYER WINS. WOOHOOO!!! START NEW GAME');
-            };
-            nextQuestion();
-    } else {
-        gameSounds.setAttribute('src','../audio/wrongAnswer.mp3');
+    questionToAsk.correct_answer) {
+        gameSounds.setAttribute('src','audio/correctAnswer.mp3');
         muteSound ? gameSounds.removeAttribute('src') : gameSounds.play();
+        render();
+        setTimeout(nextQuestion, 1500);
+    } else {
+        gameSounds.setAttribute('src','audio/wrongAnswer.mp3');
+        muteSound ? gameSounds.removeAttribute('src') : gameSounds.play();
+        render();
         // alert('Game Over! Try Again');
         // init();
     }
 }
 
 function nextQuestion(){
+    if (questionToAsk){
+        prevAskedQuestions.push(questionToAsk);                             //puts question in array of asked questions
+        questions.splice(questions.findIndex(q => q == questionToAsk),1);   //deletes questions from list of questions
+    }
+    qNum += 1;
+    if (qNum>15){
+        alert('PLAYER WINS. WOOHOOO!!! START NEW GAME');
+    };
     audianceGraphURL = "";
     pickedAnswer = null;
+    pickedAnswerChecked = false;
     pickQuestion();
     populateAnswers();
     render();
