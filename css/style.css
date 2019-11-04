@@ -166,5 +166,8 @@ div.highlight {
         padding: 0;
         padding-bottom: 10px;
     }
+    div.imagecontainer {
+        flex-basis: 100px;
+    }
 
 }
