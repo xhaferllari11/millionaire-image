@@ -77,11 +77,11 @@ img.scoreboardimg{
 section{
     margin-top: 1%;
     background-image: url('../images/template5.png');
-    background-size: 100% 200px;
+    background-size: 100% 100%;
     background-repeat: no-repeat;
-    height: 200px;
+    /* height: 200px; */
     display: grid;
-    grid-template-rows: 95px 1fr 1fr;
+    grid-template-rows:  23fr 14fr 14fr;
     grid-template-columns: 11% 2fr 2fr 11%;
     color: white;
     text-align: left;

@@ -21,7 +21,8 @@ var audianceGraphURL;       //URL for API of quickchart.io, uses graph objects f
 var muteSound;              //player selects to keep music on or off
 var pickedAnswer;           //answer used picked
 var pickedAnswerChecked;    //boolean to say if check answer was called
-var phoneCallAns;          //phone call answer if phonecall lifeline used
+var phoneCallAns;           //phone call answer if phonecall lifeline used
+var playerLost;             //boolean to disable buttons upon losing
 
 //cached elements
 var questionEl = document.querySelector('.question');
@@ -110,6 +111,7 @@ async function init(){
     qNum = 0;
     prevAskedQuestions = [];
     audianceGraphURL = "";
+    playerLost = false;
     questions = await getQuestions();     //stores questions in questions variable
     lifelines = {
         'fifty': true,
@@ -150,12 +152,14 @@ function populateAnswers(){
     let randIndex = Math.floor(Math.random()*3);    //picks randomn number 1-3
     questionToAsk.incorrect_answers.splice(randIndex,0,questionToAsk.correct_answer);
     console.log(questionToAsk.correct_answer);
+    console.log(questionToAsk.question.length);
 }
 
 function answerClick(evt){
     if (evt.target.className == 'question' || 
         evt.target.tagName == 'SECTION' ||
-        evt.target.textContent == "") {return;}
+        evt.target.textContent == "" ||
+        playerLost) {return;}
     pickedAnswer = evt.target.className;
     render();
     setTimeout(checkAnswer, 1500);
@@ -167,12 +171,30 @@ function checkAnswer(){
     questionToAsk.correct_answer) {
         renderSound('correct');
         render();
+        if (qNum == 15) {
+            setTimeout(function(){
+                alert('Player Won!!!! Wooohooo. Hit New Game to play again');
+            }, 2000)
+        }
         setTimeout(nextQuestion, 1500);
     } else {
+        playerLost = true;
+        for (life in lifelines){
+            life = false;
+        }
         renderSound('wrong');
+        let winnings = 0;
+        if (qNum >10){
+            winnings = 32000;
+            qNum = 10;
+        } else if (qNum > 5) {
+            winnings = 1000;
+            qNum = 5;
+        } 
         render();
-        // alert('Game Over! Try Again');
-        // init();
+        setTimeout(function(){
+            alert(`Game Over! You won $${winnings}. Hit New Game to try again`);
+        }, 2000);
     }
 }
 
@@ -190,6 +212,11 @@ function nextQuestion(){
     pickedAnswer = null;
     pickedAnswerChecked = false;
     pickQuestion();
+    //large string questions don't display well, so I'm removing
+    while (questionToAsk.question.length > 100) {
+        questions.splice(questions.findIndex(q => q == questionToAsk),1);   //deletes questions from list of questions
+        pickQuestion();
+    }   
     populateAnswers();
     render();
 }
@@ -218,7 +245,7 @@ function allMusicHandler(){
 
 // Also consider making an object for each lifelife. Making put object in lifelines object
 function lifelineHandler(evt){
-    if (evt.target.getAttribute('src')) {return;}
+    if (evt.target.getAttribute('src') || playerLost) {return;}
     let lifeline = evt.target.className;
     if (lifeline == 'fifty') {
         renderSound('fifty');
