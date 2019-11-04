@@ -46,7 +46,7 @@ function render(){
     for (lifeline in lifelines) {
         let lifelineEl = document.querySelector(`.${lifeline}`);
         if (!lifelines[lifeline]) {
-            lifelineEl.setAttribute('src','../images/redX.png');
+            lifelineEl.setAttribute('src','images/redX.png');
         } else {
             lifelineEl.setAttribute('src',"");
         }
@@ -62,12 +62,11 @@ function render(){
 
     if (pickedAnswerChecked && pickedAnswer ){
         let correctAnswerLetter = choices[questionToAsk.incorrect_answers.findIndex(ans => ans == questionToAsk.correct_answer)];
-        answerPanelEl.style.backgroundImage = `url(../images/choice${pickedAnswer + correctAnswerLetter}answer.png)`;
+        answerPanelEl.style.backgroundImage = `url(images/choice${pickedAnswer + correctAnswerLetter}answer.png)`;
     } else if (pickedAnswer) {
-        answerPanelEl.style.backgroundImage = `url(../images/choice${pickedAnswer}.png)`;
-    } 
-     else {
-        answerPanelEl.style.backgroundImage = `url(../images/template5.png)`;        
+        answerPanelEl.style.backgroundImage = `url(images/choice${pickedAnswer}.png)`;
+    } else {
+        answerPanelEl.style.backgroundImage = `url(images/template5.png)`;        
     }
     // console.log(`../images/choice${pickedAnswer}`);
     // answerPanelEl.style.backgroundImage = `url('../images/choicea.png')`
