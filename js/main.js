@@ -329,20 +329,3 @@ function lifelineHandler(evt){
         render();
     }
 }
-
-// init();
-
-
-
-
-
-// save this to sort and pick a question randomly
-// in case i want to change to this scenario later
-
-// questions.sort(function(q1,q2){
-//     if (q1.difficulty == q2.difficulty) return 0;
-//     if (q1.difficulty == 'easy') return -1;
-//     if (q2.difficulty == 'easy') return 1;
-//     if (q1.difficulty == 'hard') return 1;
-//     if (q2.difficulty == 'hard') return -1;
-// })
