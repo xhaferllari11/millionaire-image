@@ -2,11 +2,12 @@
     box-sizing: border-box;
 }
 body{
-    background-color: skyblue;
+    background-color: rgb(2, 16, 105);
     text-align: center;
 }
 h1{
     text-align: center;
+    color: white;
     
 }
 div.frontcontents {
@@ -115,9 +116,11 @@ p.d {
     grid-row: 3 / 4;
 }
 
-input.backgroundmusic {
-    margin-left:13%;
+div.soundbuttoncontainer{
+    display: flex;
+    justify-content: center;
 }
+
 
 .audiance {
     background-image: url('../images/audiance.png');
@@ -138,8 +141,6 @@ input.backgroundmusic {
     height: 50px;
 }
 
-
-
 div.highlight {
     grid-column: 2 / 3;
     grid-row-start: 17;
@@ -147,6 +148,9 @@ div.highlight {
     background-color: rgb(182, 209, 133, .7);
 }
 
+label {
+    color: white;
+}
 
 @media only screen and (max-width: 768px) {
 

@@ -152,7 +152,6 @@ function populateAnswers(){
     let randIndex = Math.floor(Math.random()*3);    //picks randomn number 1-3
     questionToAsk.incorrect_answers.splice(randIndex,0,questionToAsk.correct_answer);
     console.log(questionToAsk.correct_answer);
-    console.log(questionToAsk.question.length);
 }
 
 function answerClick(evt){
@@ -277,13 +276,11 @@ function lifelineHandler(evt){
         audianceResponses[rightAnswerIndex] = aRightPercent;
         //in case 50/50 was used before audiance
         if (questionToAsk.incorrect_answers.some(answer => answer == "")){
-            console.log(audianceResponses);
             audianceResponses[questionToAsk.incorrect_answers.findIndex(ans => (ans != "" && ans != questionToAsk.correct_answer))] = 100 - aRightPercent;     
             audianceResponses = audianceResponses.map(function(ans){
                 if (!ans){return 0;}
                 return ans;
             });
-            console.log(audianceResponses);
             audianceGraphURL = `https://quickchart.io/chart?backgroundColor=transparent&width=150&height=200&label=false&c={type:'bar',data:{labels:['A','B','C','D'], datasets:[{backgroundColor:'teal',label:'number of audiance',data:[${audianceResponses[0]},${audianceResponses[1]},${audianceResponses[2]},${audianceResponses[3]}]}]},options:{scales:{yAxes:[{ticks:{suggestedMin:0,suggestedMax:100}}]},title:{display:true,text:'Audiance Votes',fontColor:'black'},legend:{display:false},plugins:{datalabels:{display:false}}}}`;
             lifelines.audiance = false;
             render();
