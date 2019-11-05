@@ -174,8 +174,7 @@ function checkAnswer(){
             setTimeout(function(){
                 alert('Player Won!!!! Wooohooo. Hit New Game to play again');
             }, 2000)
-        }
-        setTimeout(nextQuestion, 1500);
+        } else {setTimeout(nextQuestion, 1500)};
     } else {
         playerLost = true;
         for (life in lifelines){
