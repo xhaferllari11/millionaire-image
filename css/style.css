@@ -100,18 +100,22 @@ p.question{
     font-size: 18px; 
 }
 p.a {
+    cursor: pointer;
     grid-column: 2 / 3;
     grid-row: 2 / 3;
 }
 p.b {
+    cursor: pointer;
     grid-column: 3 / 4;
     grid-row: 2 / 3;
 }
 p.c {
+    cursor: pointer;
     grid-column: 2 / 3;
     grid-row: 3 / 4;
 }
 p.d {
+    cursor: pointer;
     grid-column: 3 / 4;
     grid-row: 3 / 4;
 }

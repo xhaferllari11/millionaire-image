@@ -150,7 +150,8 @@ function pickQuestion(){
 //inserts the correct answer into the array of 3 wrong answers randomly
 function populateAnswers(){
     let randIndex = Math.floor(Math.random()*3);    //picks randomn number 1-3
-    questionToAsk.incorrect_answers.splice(randIndex,0,questionToAsk.correct_answer);
+    (randIndex == 2) ? questionToAsk.incorrect_answers.push(questionToAsk.correct_answer) :
+        questionToAsk.incorrect_answers.splice(randIndex,0,questionToAsk.correct_answer);
     console.log(questionToAsk.correct_answer);
 }
 
