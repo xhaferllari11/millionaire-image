@@ -67,6 +67,8 @@ function render(){
     if (phoneCallAns && audianceGraphURL){
         if (frontImgEl.getAttribute('src') == 'images/phonecallcloud.png'){
             frontImgEl.setAttribute('src',audianceGraphURL);
+            phoneCallerEl.removeAttribute('src');
+            phoneCallAnswerEl.textContent = "";
         } else {
             frontImgEl.setAttribute('src','images/phonecallcloud.png');
             phoneCallerEl.setAttribute('src','images/phonecall.png');
