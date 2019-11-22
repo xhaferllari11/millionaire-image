@@ -3,6 +3,8 @@ const fetchURL = 'https://opentdb.com/api.php?amount=45&type=multiple';
 const choices = ['a','b','c','d'];
 const bgPlayer = new Audio('audio/MainTheme.mp3');
 const gameSounds = new Audio();
+const audianceGraphURL1 = `https://quickchart.io/chart?backgroundColor=transparent&width=150&height=200&label=false&c={type:'bar',data:{labels:['A','B','C','D'], datasets:[{backgroundColor:'teal',label:'number of audiance',data:[`;
+const audianceGraphURL2 = `]}]},options:{scales:{yAxes:[{ticks:{suggestedMin:0,suggestedMax:100}}]},title:{display:true,text:'Audiance Votes',fontColor:'black'},legend:{display:false},plugins:{datalabels:{display:false}}}}`;
 const soundsURLs = {
     'newGame': 'audio/letsPlay.mp3',
     'fifty':'audio/fiftysound.mp3',
@@ -15,7 +17,7 @@ const soundsURLs = {
 var qNum;                   //represented as number 1-15 that the playe is on
 var questions;              //array of questions
 var questionToAsk;          //question object chosen to ask the player
-var prevAskedQuestions; 
+var prevAskedQuestions;     //keep array of previous questions
 var lifelines;              //lifeline booleans
 var audianceGraphURL;       //URL for API of quickchart.io, uses graph objects from chart.js
 var muteSound;              //player selects to keep music on or off
@@ -49,11 +51,13 @@ lifelinesEl.addEventListener('click', lifelineHandler);
 
 //functions
 function render(){
+    //update question and answers
     questionEl.textContent = decodeHtml(questionToAsk.question); 
     aEl.textContent = (!questionToAsk.incorrect_answers[0]) ? "" : `A. ${questionToAsk.incorrect_answers[0]}`;
     bEl.textContent = (!questionToAsk.incorrect_answers[1]) ? "" : `B. ${questionToAsk.incorrect_answers[1]}`;
     cEl.textContent = (!questionToAsk.incorrect_answers[2]) ? "" : `C. ${questionToAsk.incorrect_answers[2]}`;
     dEl.textContent = (!questionToAsk.incorrect_answers[3]) ? "" : `D. ${questionToAsk.incorrect_answers[3]}`;
+    // update lifelines
     for (lifeline in lifelines) {
         let lifelineEl = document.querySelector(`.${lifeline}`);
         if (!lifelines[lifeline]) {
@@ -63,7 +67,8 @@ function render(){
         }
     }
     highlightQNumberEl.style.gridRowStart = 17-qNum;
-    //case where audiance and phone call used in same turn
+    //case where audiance and phone call both used in same turn, needed
+    //special code for this bc they take up the same image location
     if (phoneCallAns && audianceGraphURL){
         if (frontImgEl.getAttribute('src') == 'images/phonecallcloud.png'){
             frontImgEl.setAttribute('src',audianceGraphURL);
@@ -74,6 +79,7 @@ function render(){
             phoneCallerEl.setAttribute('src','images/phonecall.png');
             phoneCallAnswerEl.textContent = phoneCallAns;    
         }
+    //case where phonecall or audiance called separately
     } else{
         if (phoneCallAns) {
             frontImgEl.setAttribute('src','images/phonecallcloud.png');
@@ -92,7 +98,9 @@ function render(){
             frontImgEl.setAttribute('src','images/logo.png');
         }
     }
-
+    //displaying case of picking answer (yellow)
+    //picked answer and correct answer (yellow and green/red)
+    //no picked answers
     if (pickedAnswerChecked && pickedAnswer ){
         let correctAnswerLetter = choices[questionToAsk.incorrect_answers.findIndex(ans => ans == questionToAsk.correct_answer)];
         answerPanelEl.style.backgroundImage = `url(images/choice${pickedAnswer + correctAnswerLetter}answer.png)`;
@@ -108,13 +116,14 @@ function renderSound(whichSound){
     muteSound ? gameSounds.removeAttribute('src') : gameSounds.play();
 }
 
+//inti includes AJAX function to get qustions from Trivia
 async function init(){
     renderSound('newGame');
     qNum = 0;
     prevAskedQuestions = [];
     audianceGraphURL = "";
     playerLost = false;
-    questions = await getQuestions();     //stores questions in questions variable
+    questions = await getQuestions();    
     lifelines = {
         'fifty': true,
         'audiance': true,
@@ -157,6 +166,7 @@ function populateAnswers(){
     console.log(questionToAsk.correct_answer);
 }
 
+//if user first clicks answer
 function answerClick(evt){
     if (evt.target.className == 'question' || 
         evt.target.tagName == 'SECTION' ||
@@ -169,6 +179,7 @@ function answerClick(evt){
 
 function checkAnswer(){
     pickedAnswerChecked = true;
+    //answer correctly
     if (questionToAsk.incorrect_answers[choices.findIndex(letter => letter == pickedAnswer)] == 
     questionToAsk.correct_answer) {
         renderSound('correct');
@@ -178,6 +189,7 @@ function checkAnswer(){
                 alert('Player Won!!!! Wooohooo. Hit New Game to play again');
             }, 2000)
         } else {setTimeout(nextQuestion, 1500)};
+    //wrong answer
     } else {
         playerLost = true;
         for (life in lifelines){
@@ -213,7 +225,7 @@ function nextQuestion(){
     pickedAnswer = null;
     pickedAnswerChecked = false;
     pickQuestion();
-    //large string questions don't display well, so I'm removing
+    //large string questions don't display well, so I'm removing them
     while (questionToAsk.question.length > 100) {
         questions.splice(questions.findIndex(q => q == questionToAsk),1);   //deletes questions from list of questions
         pickQuestion();
@@ -222,6 +234,7 @@ function nextQuestion(){
     render();
 }
 
+//some triviaDB qs and as come back with RegEx, and this just gets the text out
 function decodeHtml(html) {
     let txt = document.createElement("textarea");
     txt.innerHTML = html;
@@ -250,24 +263,27 @@ function lifelineHandler(evt){
     let lifeline = evt.target.className;
     if (lifeline == 'fifty') {
         renderSound('fifty');
-        let i = 0;
-        // waste of time/space while loop
-        while (i<2){
+        let answersRemoved = 0;
+        //picks random index and removes answer if not the correct answer. does it twice.
+        //note: if same index is picked randomly loop will keep going until a different index is picked
+        //could be more efficient as rand could pick correct answer many times
+        while (answersRemoved<2){
             let randIdx = Math.floor(Math.random()*4) //picks randomn number 1-4
             if (questionToAsk.incorrect_answers[randIdx] == questionToAsk.correct_answer) {
                 continue;
             } else if (questionToAsk.incorrect_answers[randIdx]){
                 questionToAsk.incorrect_answers[randIdx] = "";
-                i +=1;
+                answersRemoved +=1;
             }
         }
         lifelines.fifty = false;
         render();
-    } else if (lifeline == 'audiance') {                //need logic for using 50/50 and audiance
+    } else if (lifeline == 'audiance') {               
         renderSound('audiance');
         let aRightPercent;
         let audianceResponses = [null, null, null, null];
         let rightAnswerIndex = questionToAsk.incorrect_answers.findIndex(ans => ans == questionToAsk.correct_answer);
+        //randomly assigns an audiance pecent chance of guessing right based on q difficulty
         if (questionToAsk.difficulty == 'easy'){
             aRightPercent = Math.floor(75 + Math.random()*20);  //75-95% of audiance guesses right
         } else if (questionToAsk.difficulty == 'medium'){
@@ -278,32 +294,36 @@ function lifelineHandler(evt){
         audianceResponses[rightAnswerIndex] = aRightPercent;
         //in case 50/50 was used before audiance
         if (questionToAsk.incorrect_answers.some(answer => answer == "")){
-            audianceResponses[questionToAsk.incorrect_answers.findIndex(ans => (ans != "" && ans != questionToAsk.correct_answer))] = 100 - aRightPercent;     
+            audianceResponses[questionToAsk.incorrect_answers
+                .findIndex(ans => (ans != "" && ans != questionToAsk.correct_answer))] = 100 - aRightPercent;     
             audianceResponses = audianceResponses.map(function(ans){
                 if (!ans){return 0;}
                 return ans;
             });
-            audianceGraphURL = `https://quickchart.io/chart?backgroundColor=transparent&width=150&height=200&label=false&c={type:'bar',data:{labels:['A','B','C','D'], datasets:[{backgroundColor:'teal',label:'number of audiance',data:[${audianceResponses[0]},${audianceResponses[1]},${audianceResponses[2]},${audianceResponses[3]}]}]},options:{scales:{yAxes:[{ticks:{suggestedMin:0,suggestedMax:100}}]},title:{display:true,text:'Audiance Votes',fontColor:'black'},legend:{display:false},plugins:{datalabels:{display:false}}}}`;
+            // the graph url is a picture of a graph provided by chartsjs. it dynamically changes with my inputs
+            audianceGraphURL = `${audianceGraphURL1}${audianceResponses[0]},${audianceResponses[1]},${audianceResponses[2]},${audianceResponses[3]}${audianceGraphURL2}`;
             lifelines.audiance = false;
             render();
             return;
         }
+        //get random audiance percentage answers for the wrong answers
         let otherAnswersPercent = [];
         otherAnswersPercent[0] = Math.floor(Math.random()*(100 - aRightPercent));
         otherAnswersPercent[1] = Math.floor(Math.random()*(100 - aRightPercent-otherAnswersPercent[0]));
         otherAnswersPercent[2] = 100 - otherAnswersPercent[0] - otherAnswersPercent[1] - aRightPercent;
-        //assign remaining audiance percent randomly, waste of time code. find better way to assign each value randomnly
+        //assign remaining audiance percent randomly
         let getRandNum = Math.random()*3;
         audianceResponses[audianceResponses.findIndex(element => !element)] = otherAnswersPercent.splice(getRandNum,1)[0];
         audianceResponses[audianceResponses.findIndex(element => !element)] = otherAnswersPercent.pop();
         audianceResponses[audianceResponses.findIndex(element => !element)] = otherAnswersPercent[0];
-        audianceGraphURL = `https://quickchart.io/chart?backgroundColor=transparent&width=150&height=200&label=false&c={type:'bar',data:{labels:['A','B','C','D'], datasets:[{backgroundColor:'teal',label:'number of audiance',data:[${audianceResponses[0]},${audianceResponses[1]},${audianceResponses[2]},${audianceResponses[3]}]}]},options:{scales:{yAxes:[{ticks:{suggestedMin:0,suggestedMax:100}}]},title:{display:true,text:'Audiance Votes',fontColor:'black'},legend:{display:false},plugins:{datalabels:{display:false}}}}`;
+        audianceGraphURL = `${audianceGraphURL1}${audianceResponses[0]},${audianceResponses[1]},${audianceResponses[2]},${audianceResponses[3]}${audianceGraphURL2}`;
         lifelines.audiance = false;
         render();
     } else if (lifeline == 'phone') {
         let aRightPercent;
         let rightAnswerIndex = questionToAsk.incorrect_answers.findIndex(ans => ans == questionToAsk.correct_answer);
         let callerGuessed = false;
+        // assigns a percentage of guessing correctly by person based on q difficulty
         if (questionToAsk.difficulty == 'easy'){
             aRightPercent = Math.floor((70 + Math.random()*40)/10)*10;  //70-100% sure
         } else if (questionToAsk.difficulty == 'medium'){
